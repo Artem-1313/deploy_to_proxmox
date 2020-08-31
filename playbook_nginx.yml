@@ -1,0 +1,56 @@
+---
+- hosts: prox-net
+  tasks:
+    - name: create LXC
+      proxmox:
+         validate_certs: no
+         node: pve
+         vmid: 667
+         api_user: 'root@pam'
+         api_password: 'proxmox'
+         api_host: pve
+         password: '131313'
+         hostname: test.ua
+         ostemplate: 'local:vztmpl/debian-10.0-standard_10.0-1_amd64.tar.gz'
+         netif: '{"net0":"name=eth0,gw=192.168.63.1,ip=192.168.63.142/24,bridge=vmbr0"}'
+         pubkey: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+         storage: local-lvm
+         timeout: 1000
+         state: present
+      register: output
+
+    - name: debug
+      debug:
+         var: output
+
+    - name: start VM
+      proxmox:
+         vmid: 667
+         api_user: 'root@pam'
+         api_password: 'proxmox'
+         api_host: pve
+         state: started
+
+    - name: Add new ansible host
+      add_host:
+         hostname: 'git_web'
+         groupname: 'git_web'
+         ansible_host: '192.168.63.142'
+         ansible_user: 'root'
+         ansible_password: '131313'
+
+    - name: wait for a conn
+      wait_for:
+        host: 192.168.63.142
+        port: 22
+#        delay: 1000
+        state: started
+      delegate_to: 'git_web'
+
+    - name: Update apt
+      apt: update_cache=yes
+      delegate_to: 'git_web'
+
+    - name: Install Nginx
+      apt: name=nginx state=latest
+      delegate_to: 'git_web'
