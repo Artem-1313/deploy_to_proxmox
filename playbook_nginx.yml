@@ -13,7 +13,7 @@
          hostname: test.ua
          ostemplate: 'local:vztmpl/debian-10-standard_10.5-1_amd64.tar.gz'
          netif: '{"net0":"name=eth0,gw=192.168.63.1,ip=192.168.63.142/24,bridge=vmbr0"}'
-         pubkey: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+         pubkey: "{{ lookup('file', '/var/lib/jenkins/.ssh/id_rsa.pub') }}"
          storage: local-lvm
          timeout: 1000
          state: present
